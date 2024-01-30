@@ -89,6 +89,11 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
             "system:" + Settings.System.SHOW_FOURG_ICON;
     private static final String ROAMING_INDICATOR_ICON =
             "system:" + Settings.System.ROAMING_INDICATOR_ICON;
+    private static final String VOLTE_ICON_STYLE =
+            "system:" + Settings.System.VOLTE_ICON_STYLE;
+    private static final String VOWIFI_ICON_STYLE =
+            "system:" + Settings.System.VOWIFI_ICON_STYLE;
+
 
     private boolean mDataDisabledIcon;
     private boolean mRoamingIconAllowed;
@@ -106,6 +111,11 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
     private int mMobileStatusHistoryIndex;
 
     private boolean mIsVowifiAvailable;
+
+    // Volte Icon Style
+    private int mVolteIconStyle = 1;
+    // VoWiFi Icon
+    private int mVoWifiIconStyle = 1;
 
     private final MobileStatusTracker.Callback mMobileCallback =
             new MobileStatusTracker.Callback() {
@@ -212,6 +222,8 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
         Dependency.get(TunerService.class).addTunable(this, DATA_DISABLED_ICON);
         Dependency.get(TunerService.class).addTunable(this, SHOW_FOURG_ICON);
         Dependency.get(TunerService.class).addTunable(this, ROAMING_INDICATOR_ICON);
+        Dependency.get(TunerService.class).addTunable(this, VOLTE_ICON_STYLE);
+        Dependency.get(TunerService.class).addTunable(this, VOWIFI_ICON_STYLE);
     }
 
     @Override
@@ -230,6 +242,16 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
             case ROAMING_INDICATOR_ICON:
                 mRoamingIconAllowed =
                     TunerService.parseIntegerSwitch(newValue, false);
+                updateTelephony();
+                break;
+            case VOLTE_ICON_STYLE:
+                mVolteIconStyle =
+                    TunerService.parseInteger(newValue, 1);
+                updateTelephony();
+                break;
+            case VOWIFI_ICON_STYLE:
+                mVoWifiIconStyle =
+                    TunerService.parseInteger(newValue, 1);
                 updateTelephony();
                 break;
             default:

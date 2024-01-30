@@ -161,20 +161,10 @@ public class FooterView extends StackScrollerDecorView {
      */
     public void updateColors() {
         Resources.Theme theme = mContext.getTheme();
-        final @ColorInt int textColor = getResources().getColor(R.color.notif_pill_text, theme);
-        final Drawable clearAllBg = theme.getDrawable(R.drawable.notif_footer_btn_background);
-        final Drawable manageBg = theme.getDrawable(R.drawable.notif_footer_btn_background);
-        // TODO(b/282173943): Remove redundant tinting once Resources are thread-safe
-        final @ColorInt int buttonBgColor =
-                Utils.getColorAttrDefaultColor(mContext, com.android.internal.R.attr.colorSurface);
-        final ColorFilter bgColorFilter = new PorterDuffColorFilter(buttonBgColor, SRC_ATOP);
-        if (buttonBgColor != 0) {
-            clearAllBg.setColorFilter(bgColorFilter);
-            manageBg.setColorFilter(bgColorFilter);
-        }
-        mClearAllButton.setBackground(clearAllBg);
+        int textColor = Utils.getColorStateListDefaultColor(mContext, R.color.nf_color_button_text);
+        mClearAllButton.setBackground(theme.getDrawable(R.drawable.notif_footer_btn_background));
         mClearAllButton.setTextColor(textColor);
-        mManageButton.setBackground(manageBg);
+        mManageButton.setBackground(theme.getDrawable(R.drawable.notif_footer_btn_background));
         mManageButton.setTextColor(textColor);
         final @ColorInt int labelTextColor =
                 Utils.getColorAttrDefaultColor(mContext, android.R.attr.textColorPrimary);

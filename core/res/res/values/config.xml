@@ -3798,7 +3798,7 @@
     <bool name="config_magnification_always_on_enabled">true</bool>
 
     <!-- If true, the display will be shifted around in ambient mode. -->
-    <bool name="config_enableBurnInProtection">false</bool>
+    <bool name="config_enableBurnInProtection">true</bool>
 
     <!-- Specifies the maximum burn-in offset displacement from the center. If -1, no maximum value
          will be used. -->
@@ -5663,7 +5663,7 @@
     <!-- Corners radius for activity presented the letterbox mode. Values < 0 enable rounded
          corners with radius equal to min between device bottom corner radii. Default 0 value turns
          off rounded corners logic in LetterboxUiController. -->
-    <integer name="config_letterboxActivityCornersRadius">0</integer>
+    <integer name="config_letterboxActivityCornersRadius">32</integer>
 
     <!-- Blur radius for the Option 3 in R.integer.config_letterboxBackgroundType. Values < 0 are
         ignored and 0 is used. -->

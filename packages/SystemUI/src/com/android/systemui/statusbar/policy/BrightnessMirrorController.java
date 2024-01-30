@@ -219,7 +219,7 @@ public class BrightnessMirrorController
                     ? com.android.systemui.R.drawable.ic_qs_brightness_auto_on_new
                     : com.android.systemui.R.drawable.ic_qs_brightness_auto_off_new);
             mIcon.setBackgroundResource(isAutomatic
-                    ? com.android.systemui.R.drawable.bg_qs_brightness_auto_on
+                    ? com.android.systemui.R.drawable.brightness_bg
                     : com.android.systemui.R.drawable.bg_qs_brightness_auto_off);
             mIcon.setVisibility(View.VISIBLE);
         } else {

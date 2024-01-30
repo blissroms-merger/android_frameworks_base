@@ -470,7 +470,10 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
             mDialog.dismiss();
         }
         mContext.getTheme().applyStyle(mContext.getThemeResId(), true);
-        mConfigChanged = true;
+        if (mDialog != null) {
+            mDialog.dismiss();
+            mDialog = null;
+        }
     }
 
     public void init(int windowType, Callback callback) {
@@ -1838,7 +1841,7 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
         mHandler.removeMessages(H.DISMISS);
         rescheduleTimeoutH();
 
-        if (mConfigChanged) {
+        if (mDialog == null) {
             initDialog(lockTaskModeState); // resets mShowing to false
             mConfigurableTexts.update();
             mConfigChanged = false;
@@ -1952,6 +1955,7 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
                     if (mDialog != null) {
                         mDialog.dismiss();
                     }
+                    mDialog = null;
                     tryToRemoveCaptionsTooltip();
                     mExpanded = false;
                     if (mExpandRows != null) {
@@ -2870,8 +2874,9 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
         public void onConfigurationChanged() {
             if (mDialog != null) {
                 mDialog.dismiss();
+                mDialog = null;
+                mConfigChanged = true;
             }
-            mConfigChanged = true;
         }
 
         @Override

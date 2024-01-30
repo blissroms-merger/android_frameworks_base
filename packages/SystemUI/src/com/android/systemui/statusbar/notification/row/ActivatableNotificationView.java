@@ -244,6 +244,11 @@ public abstract class ActivatableNotificationView extends ExpandableOutlineView 
         setOutlineAlpha(alpha);
     }
 
+    private void setNormalBackgroundVisibilityAmount(float normalBackgroundVisibilityAmount) {
+        mNormalBackgroundVisibilityAmount = normalBackgroundVisibilityAmount;
+        updateOutlineAlpha();
+    }
+
     @Override
     public void setBelowSpeedBump(boolean below) {
         super.setBelowSpeedBump(below);
@@ -328,8 +333,7 @@ public abstract class ActivatableNotificationView extends ExpandableOutlineView 
     protected void setBackgroundTintColor(int color) {
         if (color != mCurrentBackgroundTint) {
             mCurrentBackgroundTint = color;
-            // TODO(282173943): re-enable this tinting optimization when Resources are thread-safe
-            if (false && color == mNormalColor) {
+            if (color == mNormalColor) {
                 // We don't need to tint a normal notification
                 color = 0;
             }

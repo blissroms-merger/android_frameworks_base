@@ -87,4 +87,6 @@
     <java-symbol type="dimen" name="status_bar_padding_start" />
     <java-symbol type="dimen" name="status_bar_padding_end" />
     <java-symbol type="dimen" name="status_bar_padding_top" />
+
+    <java-symbol type="id" name="qs_state_layer" />
 </resources>

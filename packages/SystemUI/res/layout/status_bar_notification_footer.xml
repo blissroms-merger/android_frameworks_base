@@ -20,8 +20,8 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="@dimen/custom_notification_row_padding"
-        android:paddingEnd="@dimen/custom_notification_row_padding"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:visibility="gone">
     <com.android.systemui.statusbar.AlphaOptimizedFrameLayout
         android:id="@+id/content"
@@ -56,7 +56,6 @@
                 app:layout_constraintEnd_toStartOf="@id/dismiss_text"
                 android:background="@drawable/notif_footer_btn_background"
                 android:focusable="true"
-                android:textColor="@color/notif_pill_text"
                 android:contentDescription="@string/manage_notifications_history_text"
                 android:text="@string/manage_notifications_history_text"
                 />
@@ -72,7 +71,6 @@
                 app:layout_constraintStart_toEndOf="@id/manage_text"
                 android:background="@drawable/notif_footer_btn_background"
                 android:focusable="true"
-                android:textColor="@color/notif_pill_text"
                 android:contentDescription="@string/accessibility_clear_all"
                 android:text="@string/clear_all_notifications_text"
                 />
