@@ -4954,9 +4954,6 @@ public final class NotificationPanelViewController implements ShadeSurface, Dump
                             TunerService.parseIntegerSwitch(newValue, false);
                     updateDismissAllVisibility();
                     break;
-                case QS_UI_STYLE:
-                    mIsA11Style = TunerService.parseInteger(newValue, 0) == 1;
-                    break;
                 default:
                     break;
             }
