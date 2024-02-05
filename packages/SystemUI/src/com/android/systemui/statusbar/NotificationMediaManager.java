@@ -78,7 +78,6 @@ import com.android.systemui.statusbar.phone.ScrimState;
 import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.tuner.TunerService;
 import com.android.systemui.util.NotificationUtils;
-import com.android.systemui.util.Utils;
 import com.android.systemui.util.concurrency.DelayableExecutor;
 
 import lineageos.providers.LineageSettings;
