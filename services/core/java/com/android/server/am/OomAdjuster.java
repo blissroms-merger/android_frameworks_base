@@ -3089,7 +3089,13 @@ public class OomAdjuster {
                 mProcessGroupHandler.sendMessage(mProcessGroupHandler.obtainMessage(
                         0 /* unused */, app.getPid(), processGroup, app.processName));
                 try {
-                    mService.updateCgroupPrioLocked(app.uid, app.getPid());
+                    if (oldSchedGroup != curSchedGroup) {
+                        int decremented = --uidRec.numSchedGroup[oldSchedGroup];
+                        int incremented = ++uidRec.numSchedGroup[curSchedGroup];
+                        if (decremented == 0 || incremented == 1) {
+                            mService.updateCgroupPrioLocked(uidRec);
+                        }
+                    }
                     final int renderThreadTid = app.getRenderThreadTid();
                     if (curSchedGroup == SCHED_GROUP_TOP_APP) {
                         // do nothing if we already switched to RT

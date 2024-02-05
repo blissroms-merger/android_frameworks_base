@@ -526,6 +526,9 @@ public class ActivityManagerService extends IActivityManager.Stub
     private static final String SYSTEM_PROPERTY_DEVICE_PROVISIONED =
             "persist.sys.device_provisioned";
 
+    // indexed by SCHED_GROUP_* values
+    static final int[] CGROUP_CPU_SHARES = new int[] {512, 512, 1024, 20480, 2048};
+
     static final String TAG = TAG_WITH_CLASS_NAME ? "ActivityManagerService" : TAG_AM;
     static final String TAG_BACKUP = TAG + POSTFIX_BACKUP;
     private static final String TAG_BROADCAST = TAG + POSTFIX_BROADCAST;
@@ -4480,30 +4483,37 @@ public class ActivityManagerService extends IActivityManager.Stub
         return didSomething;
     }
 
-    final void updateCgroupPrioLocked(int uid, int pid) {
-        if (UserHandle.isApp(uid) || UserHandle.isIsolated(uid)) {
-            // default cpu shares
-            int DEFAULT_CPU_SHARES = 1024;
-            // by default, we use cpu.shares set by init for system 
-            // (based from tensor devices init) - write /dev/cpuctl/system/cpu.shares 20480
-            int TOP_APP_CPU_SHARES = 20480;
-            int cpu_shares;
-            synchronized (mProcLock) {
-                ProcessRecord proc;
-                synchronized (mPidsSelfLocked) {
-                    proc = mPidsSelfLocked.get(pid);
-                }
-                if (proc.mState.getCurrentSchedulingGroup() == ProcessList.SCHED_GROUP_TOP_APP) {
-                    cpu_shares = TOP_APP_CPU_SHARES;
-                } else if (proc.mState.getCurrentSchedulingGroup() == ProcessList.SCHED_GROUP_TOP_APP_BOUND) {
-                    cpu_shares = DEFAULT_CPU_SHARES * 2;
-                } else {
-                    cpu_shares = DEFAULT_CPU_SHARES;
-                }
-                Process.setUidPrio(uid, cpu_shares);
-            }
-        }
-    }
+	final void updateCgroupPrioLocked(final UidRecord uidRec) {
+		int sg = ProcessList.SCHED_GROUP_DEFAULT;
+		if (uidRec.numSchedGroup[ProcessList.SCHED_GROUP_TOP_APP] > 0) {
+		    sg = ProcessList.SCHED_GROUP_TOP_APP;
+		} else if (uidRec.numSchedGroup[ProcessList.SCHED_GROUP_TOP_APP_BOUND] > 0) {
+		    sg = ProcessList.SCHED_GROUP_TOP_APP_BOUND;
+		} else if (uidRec.numSchedGroup[ProcessList.SCHED_GROUP_BACKGROUND] == uidRec.getNumOfProcs()) {
+		    sg = ProcessList.SCHED_GROUP_BACKGROUND;
+		} else if (uidRec.numSchedGroup[ProcessList.SCHED_GROUP_RESTRICTED] == uidRec.getNumOfProcs()) {
+		    sg = ProcessList.SCHED_GROUP_RESTRICTED;
+		}
+		if (sg != uidRec.setSchedGroup) {
+		    if (UserHandle.isApp(uidRec.mUid) || UserHandle.isIsolated(uidRec.mUid)) {
+		        final int callingUid = Binder.getCallingUid();
+		        final String packageName;
+		        final long token = Binder.clearCallingIdentity();
+		        final String[] uiCriticalPackages = { "com.android.systemui", "com.android.launcher3", "com.nothing.launcher", "com.google.android.apps.nexuslauncher" };
+		        try {
+		            packageName = AppGlobals.getPackageManager().getNameForUid(callingUid);
+		            if (packageName != null && Arrays.asList(uiCriticalPackages).contains(packageName.toLowerCase())) {
+		                sg = ProcessList.SCHED_GROUP_TOP_APP;
+		            }
+		        } catch (RemoteException e) {
+		        } finally {
+		            Binder.restoreCallingIdentity(token);
+		        }
+		        uidRec.setSchedGroup = sg;
+		        Process.setUidPrio(uidRec.mUid, CGROUP_CPU_SHARES[sg]);
+		    }
+		}
+	}
 
     @GuardedBy("this")
     void handleProcessStartOrKillTimeoutLocked(ProcessRecord app, boolean isKillTimeout) {
@@ -7944,9 +7954,7 @@ public class ActivityManagerService extends IActivityManager.Stub
                 // promote to FIFO now
                 if (proc.mState.getCurrentSchedulingGroup() == ProcessList.SCHED_GROUP_TOP_APP) {
                     if (DEBUG_OOM_ADJ) Slog.d("UI_FIFO", "Promoting " + tid + "out of band");
-                    // please refer to CL b6aa7c416c6d60fc099d157c3981cc59a5478081 about
-                    // why we can't boost to top-app priority after promoting to FIFO
-                    scheduleAsFifoPriority(proc.getRenderThreadTid(), 1, /*noLogs*/true);
+                    scheduleAsFifoPriority(proc.getRenderThreadTid(), THREAD_PRIORITY_TOP_APP_BOOST, /*noLogs*/true);
                 }
             }
         }
