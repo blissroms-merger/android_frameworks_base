@@ -526,6 +526,18 @@ public class ActivityManagerService extends IActivityManager.Stub
     private static final String SYSTEM_PROPERTY_DEVICE_PROVISIONED =
             "persist.sys.device_provisioned";
 
+    private static final int BG_CPU_SHARES = 1024;
+    private static final int DEFAULT_CPU_SHARES = 1024;
+    private static final int FG_CPU_SHARES = 10240;
+    private static final int TOP_APP_CPU_SHARES = 20480;
+
+    private static final Set<String> UI_CRITICAL_PACKAGES = new HashSet<>(Arrays.asList(
+            "com.android.systemui",
+            "com.android.launcher3",
+            "com.nothing.launcher",
+            "com.google.android.apps.nexuslauncher"
+    ));
+
     static final String TAG = TAG_WITH_CLASS_NAME ? "ActivityManagerService" : TAG_AM;
     static final String TAG_BACKUP = TAG + POSTFIX_BACKUP;
     private static final String TAG_BROADCAST = TAG + POSTFIX_BROADCAST;
@@ -4481,28 +4493,36 @@ public class ActivityManagerService extends IActivityManager.Stub
     }
 
     final void updateCgroupPrioLocked(int uid, int pid) {
-        if (UserHandle.isApp(uid) || UserHandle.isIsolated(uid)) {
-            // default cpu shares
-            int DEFAULT_CPU_SHARES = 1024;
-            // by default, we use cpu.shares set by init for system 
-            // (based from tensor devices init) - write /dev/cpuctl/system/cpu.shares 20480
-            int TOP_APP_CPU_SHARES = 20480;
-            int cpu_shares;
-            synchronized (mProcLock) {
-                ProcessRecord proc;
-                synchronized (mPidsSelfLocked) {
-                    proc = mPidsSelfLocked.get(pid);
-                }
-                if (proc.mState.getCurrentSchedulingGroup() == ProcessList.SCHED_GROUP_TOP_APP) {
-                    cpu_shares = TOP_APP_CPU_SHARES;
-                } else if (proc.mState.getCurrentSchedulingGroup() == ProcessList.SCHED_GROUP_TOP_APP_BOUND) {
-                    cpu_shares = DEFAULT_CPU_SHARES * 2;
-                } else {
-                    cpu_shares = DEFAULT_CPU_SHARES;
-                }
-                Process.setUidPrio(uid, cpu_shares);
-            }
+        if (!UserHandle.isApp(uid) && !UserHandle.isIsolated(uid)) {
+            return;
         }
+        int cpuShares = DEFAULT_CPU_SHARES;
+        synchronized (mProcLock) {
+            ProcessRecord proc;
+            synchronized (mPidsSelfLocked) {
+                proc = mPidsSelfLocked.get(pid);
+            }
+            int schedulingGroup = proc.mState.getCurrentSchedulingGroup();
+            switch (schedulingGroup) {
+                case ProcessList.SCHED_GROUP_TOP_APP:
+                    cpuShares = TOP_APP_CPU_SHARES;
+                    break;
+                case ProcessList.SCHED_GROUP_TOP_APP_BOUND:
+                    cpuShares = FG_CPU_SHARES;
+                    break;
+                case ProcessList.SCHED_GROUP_BACKGROUND:
+                case ProcessList.SCHED_GROUP_RESTRICTED:
+                    cpuShares = BG_CPU_SHARES;
+                    break;
+            }
+            try {
+                String packageName = AppGlobals.getPackageManager().getNameForUid(uid);
+                if (packageName != null && UI_CRITICAL_PACKAGES.contains(packageName.toLowerCase())) {
+                    cpuShares = TOP_APP_CPU_SHARES;
+                }
+            } catch (RemoteException e) {}
+        }
+        Process.setUidPrio(uid, cpuShares);
     }
 
     @GuardedBy("this")
