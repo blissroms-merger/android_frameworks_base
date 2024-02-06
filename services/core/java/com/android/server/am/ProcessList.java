@@ -3117,6 +3117,7 @@ public final class ProcessList {
 
             // Reset render thread tid if it was already set, so new process can set it again.
             proc.setRenderThreadTid(0);
+            uidRec.numSchedGroup[ProcessList.SCHED_GROUP_DEFAULT]++;
             mProcessNames.put(proc.processName, proc.uid, proc);
         }
         if (proc.isolated) {
@@ -3267,12 +3268,14 @@ public final class ProcessList {
                 mProcessNames.remove(name, uid);
             }
             if (record != null) {
-                final int pid = record.getPid();
                 final UidRecord uidRecord = record.getUidRecord();
                 if (uidRecord != null) {
                     uidRecord.removeProcess(record);
                     if (uidRecord.getNumOfProcs() == 0) {
-                        mService.updateCgroupPrioLocked(uid, pid);
+                        int decremented = --uidRecord.numSchedGroup[uidRecord.setSchedGroup];
+                        if (decremented == 0) { // only need to update if this made a group empty
+                            mService.updateCgroupPrioLocked(uidRecord);
+                        }
                         // No more processes using this uid, tell clients it is gone.
                         if (DEBUG_UID_OBSERVERS) {
                             Slog.i(TAG_UID_OBSERVERS, "No more processes in " + uidRecord);
