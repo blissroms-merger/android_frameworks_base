@@ -344,13 +344,13 @@ final class VrController {
         }
 
         if (mVrRenderThreadTid > 0) {
-            ActivityManagerService.scheduleAsRegularPriority(mVrRenderThreadTid, 0, suppressLogs);
+            ActivityManagerService.scheduleAsRegularPriority(mVrRenderThreadTid, suppressLogs);
             mVrRenderThreadTid = 0;
         }
 
         if (newTid > 0) {
             mVrRenderThreadTid = newTid;
-            ActivityManagerService.scheduleAsFifoPriority(mVrRenderThreadTid, 1, suppressLogs);
+            ActivityManagerService.scheduleAsFifoPriority(mVrRenderThreadTid, suppressLogs);
         }
         return mVrRenderThreadTid;
     }

@@ -18,7 +18,7 @@ package com.android.server;
 
 import static android.os.Process.getThreadPriority;
 import static android.os.Process.myTid;
-import com.android.server.am.ActivityManagerService;
+import static android.os.Process.setThreadPriority;
 
 /**
  * Utility class to boost threads in sections where important locks are held.
@@ -47,7 +47,7 @@ public class ThreadPriorityBooster {
         if (state.regionCounter == 0) {
             final int prevPriority = getThreadPriority(state.tid);
             if (prevPriority > mBoostToPriority) {
-                ActivityManagerService.scheduleAsFifoPriority(state.tid, mBoostToPriority, true);
+                setThreadPriority(state.tid, mBoostToPriority);
                 state.prevPriority = prevPriority;
             }
         }
@@ -61,7 +61,7 @@ public class ThreadPriorityBooster {
         final PriorityState state = mThreadState.get();
         state.regionCounter--;
         if (state.regionCounter == 0 && state.prevPriority != PRIORITY_NOT_ADJUSTED) {
-        	ActivityManagerService.scheduleAsRegularPriority(state.tid, state.prevPriority, true);
+            setThreadPriority(state.tid, state.prevPriority);
             state.prevPriority = PRIORITY_NOT_ADJUSTED;
         }
     }
@@ -79,7 +79,7 @@ public class ThreadPriorityBooster {
         if (state.regionCounter != 0) {
             final int prevPriority = getThreadPriority(state.tid);
             if (prevPriority != priority) {
-                ActivityManagerService.scheduleAsFifoPriority(state.tid, priority, true);
+                setThreadPriority(state.tid, priority);
             }
         }
     }
